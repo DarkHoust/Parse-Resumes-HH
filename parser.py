@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
+import re
 
 def parseLink(link):
     html = requests.get(link, headers={'User-Agent': 'Custom'})
@@ -22,6 +23,19 @@ def parseLink(link):
         age = "".join(i for i in age if i.isdigit())
     else:
         age = None
+
+    experience_years = 0
+    experience_months = 0
+    for _ in soup.findAll('span', attrs={'class': 'resume-block__title-text resume-block__title-text_sub'}):
+        if "Опыт" in _.text or "experience" in _.text:
+            experience = re.findall(r'\b\d+\b', _.text)
+            if len(experience) == 2:
+                experience_years = experience[0]
+                experience_months = experience[1]
+            elif len(experience) == 1:
+                experience_years = experience[0]
+            else:
+                break
 
     employment = None
     for _ in soup.findAll('div', attrs={'class' : 'resume-block-container'}):
@@ -56,6 +70,8 @@ def parseLink(link):
         'salary': salary,
         'age': age,
         'employment' : employment,
+        'experience_years': experience_years,
+        'experience_months': experience_months,
         'sex': sex,
         'link': link
     }
